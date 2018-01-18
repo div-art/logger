@@ -1,0 +1,32 @@
+{
+    "name": "Div-Art/logger",
+    "description": "create log file",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Div-Art",
+            "email": "info@div-art.com"
+        }
+    ],
+    "require": {
+        "illuminate/support": "~5"
+    },
+    "autoload": {
+        "psr-4": {
+            "Divart\\Logger\\": "src/"
+        },
+        "files": [
+            "src/functions.php"
+        ]
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "Divart\\Logger\\LoggerServiceProvider"
+            ],
+            "aliases": {
+                "Logger": "Divart\\Logger\\Facades\\Logger"
+            }
+        }
+    }
+}
