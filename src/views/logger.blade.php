@@ -92,25 +92,20 @@
                 <hr>
                 
                 <p><center>Logs</center></p>
-                    @foreach($data as $key => $value)
-                    <form method="post" action="{{route('deleteOneLog')}}">
-                        {{ csrf_field() }}
-                        <input type="hidden" name="log" value="{{$data[$key]['time']}}">
-                        <input type="submit" value="delete this log">
-                    </form>
-                    <p>time: {{$data[$key]['time']}}</p>
-                    <p>type: {{$data[$key]['type']}}</p>
-                    <p>mark: {{$data[$key]['mark']}}</p>
-                    <p>data:</p>
+                    @for($i=0; $i < count($data); $i++)
+                        <form method="post" action="{{route('deleteOneLog')}}">
+                            {{ csrf_field() }}
+                            <input type="hidden" name="log" value="{{$data[$i]->time}}">
+                            <input type="submit" value="delete this log">
+                        </form>
+                        <p>time: {{$data[$i]->time}}</p>
+                        <p>type: {{$data[$i]->type}}</p>
+                        <p>mark: {{$data[$i]->mark}}</p>
+                        <p>data:</p>
 <pre>
-{{print_r($data[$key]['data'])}}
+{{print_r($data[$i]->data)}}
 </pre>
-                <!-- @foreach($data[$key]['data'] as $k => $v)
-                    {{$k}}
-                @endforeach -->
-                        
-                    <hr>
-                @endforeach
+                    @endfor
 
             </div>
         </div>
