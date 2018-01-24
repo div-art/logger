@@ -28,7 +28,7 @@ php artisan vendor:publish --provider="Divart\Logger\LoggerServiceProvider"
 ```
 
 ## Usage
-**Be sure to include the namespace for the class wherever you plan to use this library**
+** Do not forget to include the namespace for the controller class where you plan to use this library **
 
 ```
 use Divart\Logger\Facades\Logger;
@@ -37,10 +37,10 @@ use Divart\Logger\Facades\Logger;
 ## Add from ENV file:
 
 ```
-//PATH_LOG - path where been save logfile, default value 'storage/logger'
+#PATH_LOG - path where been save logfile, default value 'storage/logger'
 PATH_LOG=storage/logger
 
-//LOG_SAVE - time saving your logfile, defaul value 7 days
+#LOG_SAVE - time saving your logfile, defaul value 7 days
 LOG_SAVE=7
 ```
 

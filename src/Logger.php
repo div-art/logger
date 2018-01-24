@@ -20,28 +20,32 @@ class Logger extends FileManager
         return $this->saveDataInLogFile($data);
     }
 
-    public function save($data, $mark = '')
+    public function save($data, $mark = NULL)
     {
         $type = 'save';
-        return $this->saveLog($data, $mark, $type);
+        $mark = (empty($mark)) ? $type : $mark;
+        $this->saveLog($data, $mark, $type);
     }
 
     public function info($data, $mark = '')
     {
         $type = 'info';
-        return $this->saveLog($data, $mark, $type);
+        $mark = (empty($mark)) ? $type : $mark;
+        $this->saveLog($data, $mark, $type);
     }
 
     public function danger($data, $mark = '')
     {
         $type = 'danger';
-        return $this->saveLog($data, $mark, $type);
+        $mark = (empty($mark)) ? $type : $mark;
+        $this->saveLog($data, $mark, $type);
     }
 
     public function success($data, $mark = '')
     {
         $type = 'success';
-        return $this->saveLog($data, $mark, $type);
+        $mark = (empty($mark)) ? $type : $mark;
+        $this->saveLog($data, $mark, $type);
     }
 
     public function request($key = NULL)

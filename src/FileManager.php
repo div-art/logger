@@ -65,18 +65,7 @@ class FileManager
     public function createFolder()
     {
         $this->path = ($this->path[0] === '/') ? substr($this->path, 1) : $this->path;
-        if ( !is_dir($this->root.$this->path)) {
-
-            $array_dir = explode('/', $this->path);
-            $this->path = '';
-            
-            for ($i = 0; $i < count($array_dir); $i++){
-                $this->path .= $array_dir[$i];
-
-                if ( !file_exists($this->root.$this->path)) mkdir($this->root.$this->path, 0755);
-                $this->path .= '/';
-            }
-        }
+        if ( !is_dir($this->root.$this->path)) mkdir($this->root.$this->path, 0777, true);
 
         return $this->gitignoreLogFile();
     }

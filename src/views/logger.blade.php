@@ -93,9 +93,12 @@
                     <p>type: {{$data[$i]->type}}</p>
                     <p>mark: {{$data[$i]->mark}}</p>
                     <p>data:</p>
-<pre>
-{{print_r($data[$i]->data)}}
-</pre>
+                    
+                    @foreach($data[$i]->data as $k => $v)
+                        <p>{{$k}}: {{print_r($v, true)}}</p>
+                    @endforeach
+                    <hr>
+
                 @endfor
             </div>
         </div>
