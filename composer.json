@@ -13,7 +13,7 @@
     },
     "autoload": {
         "psr-4": {
-            "Divart\\Logger\\": "src/"
+            "DivArt\\Logger\\": "src/"
         },
         "files": [
             "src/functions.php"
@@ -22,10 +22,10 @@
     "extra": {
         "laravel": {
             "providers": [
-                "Divart\\Logger\\LoggerServiceProvider"
+                "DivArt\\Logger\\LoggerServiceProvider"
             ],
             "aliases": {
-                "Logger": "Divart\\Logger\\Facades\\Logger"
+                "Logger": "DivArt\\Logger\\Facades\\Logger"
             }
         }
     }
