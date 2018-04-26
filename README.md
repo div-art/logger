@@ -55,7 +55,7 @@ date.json:
 
 ``` php
 //get all logs
-Route::get('/logger/all/{date?}');
+Route::get('/div-art/logger/all/{date?}');
 ```
 
 ## Methods:
