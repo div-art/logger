@@ -1,42 +1,44 @@
 <?php
 
-
-namespace Divart\Logger;
+namespace DivArt\Logger;
 
 use Illuminate\Support\ServiceProvider;
-use Illuminate\Routing\Router;
-use Route;
 
-class LoggerServiceProvider extends ServiceProvider{
-
-
+class LoggerServiceProvider extends ServiceProvider
+{
     /**
-     * Register any package services.
+     * Bootstrap services.
      *
      * @return void
      */
+    public function boot()
+    {
+        $this->mergeConfigFrom(
+            __DIR__ . '/config/logger.php', 'path'
+        );
 
+        $this->publishes([
+            __DIR__ . '/config' => config_path(),
+        ]);
+
+        $this->loadViewsFrom(
+            __DIR__. '/views/', 'div-art'
+        );
+
+        $this->loadRoutesFrom(
+            __DIR__ . '/web/routes.php'
+        );
+    }
+
+    /**
+     * Register services.
+     *
+     * @return void
+     */
     public function register()
     {
-        $this->app->bind('logger', function ($app)
-        {
+        $this->app->bind('logger', function () {
             return new Logger;
         });
     }
-
-    /**
-     * Perform post-registration booting of services.
-     *
-     * @return void
-     */
-
-    public function boot()
-    {
-        $this->loadRoutesFrom(__DIR__.'/Http/routes.php');
-        $this->loadViewsFrom(__DIR__.'/views', 'logger');
-        $this->publishes([__DIR__.'/views' => resource_path('views/logger')], 'logger-views');
-        $this->publishes([__DIR__ . "/config/config.php" => config_path('logger.php')], 'logger-config');
-        $this->mergeConfigFrom(__DIR__.'/config/config.php', 'logger');
-    }
-
 }

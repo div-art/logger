@@ -1,138 +1,339 @@
 <?php
 
-namespace Divart\Logger;
+namespace DivArt\Logger;
 
-use Divart\Logger\FileManager;
-use Illuminate\Support\ServiceProvider;
+use Exception;
 
-class Logger extends FileManager
+/**
+ * Class Logger
+ * @package DivArt\Logger
+ */
+class Logger extends Helper
 {
-    public function saveLog($data, $mark, $type)
+
+    /**
+     * logging simple record with user data
+     * @param $data
+     * @param string $mark
+     * @throws Exception
+     */
+    public function save($data, $mark = '-')
     {
-        $this->createFolder();
-        $data = array(
-            'time' => date('Y-m-d-H-i-s'),
-            'type' => $type,
-            'mark' => $mark,
-            'data' => $data
-        );
-
-        return $this->saveDataInLogFile($data);
-    }
-
-    public function save($data, $mark = NULL)
-    {
-        $type = 'save';
-        $mark = (empty($mark)) ? $type : $mark;
-        $this->saveLog($data, $mark, $type);
-    }
-
-    public function info($data, $mark = '')
-    {
-        $type = 'info';
-        $mark = (empty($mark)) ? $type : $mark;
-        $this->saveLog($data, $mark, $type);
-    }
-
-    public function danger($data, $mark = '')
-    {
-        $type = 'danger';
-        $mark = (empty($mark)) ? $type : $mark;
-        $this->saveLog($data, $mark, $type);
-    }
-
-    public function success($data, $mark = '')
-    {
-        $type = 'success';
-        $mark = (empty($mark)) ? $type : $mark;
-        $this->saveLog($data, $mark, $type);
-    }
-
-    public function request($key = NULL)
-    {
-        $data = ( is_null($key)) ? request() : request()->only($key);
-        $mark = ( is_null($key) or is_object($key)) ? 'request' : $key;
-        $type = 'request';
-
-        return $this->saveLog($data, $mark, $type);
-    }
-
-    public function input($key = NULL)
-    {
-        $data = ( is_null($key)) ? request()->all() : request()->input($key);
-        $mark = ( is_null($key)) ? 'input' : $key;
-        $type = 'input';
-
-        return $this->saveLog($data, $mark, $type);
-    }
-
-    public function json($key = NULL)
-    {
-        $data = ( is_null($key)) ? request()->json()->all() : request()->json()->only($key);
-        $mark = ( is_null($key)) ? 'json' : $key;
-        $type = 'json';
-
-        return $this->saveLog($data, $mark, $type);
-    }
-
-    public function post($key = NULL)
-    {
-        $data = ( is_null($key)) ? $_POST : $_POST[$key];
-        $mark = ( is_null($key)) ? 'post' : $key;
-        $type = 'post';
-
-        return $this->saveLog($data, $mark, $type);
-    }
-
-    public function get($key = NULL)
-    {
-        $data = ( is_null($key)) ? $_GET : $_GET[$key];
-        $mark = ( is_null($key)) ? 'get' : $key;
-        $type = 'get';
-
-        return $this->saveLog($data, $mark, $type);
-    }
-
-    public function php($key = NULL)
-    {
-        $data_input = file_get_contents('php://input');
-        $data_input = explode('&', $data_input);
-
-        for ($i = 0; $i < count($data_input); $i++) {
-            $temp_data = explode('=', $data_input[$i]);
-            $data[$temp_data[0]] = $temp_data[1];
+        if (is_null($data)) {
+            throw new Exception('required parameter \'data\' cannot be null');
         }
 
-        $mark = ( is_null($key)) ? 'php://input' : $data = $data[$key];
-        $type = 'php';
+        $filename = date('d-m-Y');
 
-        return $this->saveLog($data, $mark, $type);
+        $debugBacktrace = debug_backtrace();
+
+        $record = $this->formattingRecord($debugBacktrace, 'simple', $mark, $data);
+
+        $this->store($record, $filename);
     }
 
-    public function server($key = NULL)
+    /**
+     * logging info record with user data
+     * @param $data
+     * @param string $mark
+     * @throws Exception
+     */
+    public function info($data, $mark = '-')
     {
-        $data = ( is_null($key)) ? $_SERVER : $_SERVER[$key];
-        $mark = ( is_null($key)) ? 'server' : $key;
-        $type = 'server';
+        if (is_null($data)) {
+            throw new Exception('required parameter \'data\' cannot be null');
+        }
 
-        return $this->saveLog($data, $mark, $type);
+        $filename = date('d-m-Y');
+
+        $debugBacktrace = debug_backtrace();
+
+        $record = $this->formattingRecord($debugBacktrace, 'info', $mark, $data);
+
+        $this->store($record, $filename);
     }
 
-    public function cookies($key = NULL)
+    /**
+     * logging critical record with user data
+     * @param $data
+     * @param string $mark
+     * @throws Exception
+     */
+    public function danger($data, $mark = '-')
     {
-        $data = ( is_null($key)) ? $_COOKIE : $_COOKIE[$key];
-        $mark = ( is_null($key)) ? 'cookies' : $key;
-        $type = 'cookies';
+        if (is_null($data)) {
+            throw new Exception('required parameter \'data\' cannot be null');
+        }
 
-        return $this->saveLog($data, $mark, $type);
+        $filename = date('d-m-Y');
+
+        $debugBacktrace = debug_backtrace();
+
+        $record = $this->formattingRecord($debugBacktrace, 'critical', $mark, $data);
+
+        $this->store($record, $filename);
     }
 
-    public function headers($key = '')
+    /**
+     * logging success record with user data
+     * @param $data
+     * @param string $mark
+     * @throws Exception
+     */
+    public function success($data, $mark = '-')
     {
-        $data = ( is_null($key)) ? request()->header() : request()->header($key);
-        $mark = ( is_null($key)) ? 'headers' : $key;
-        $type = 'headers';
+        if (is_null($data)) {
+            throw new Exception('required parameter \'data\' cannot be null');
+        }
 
-        return $this->saveLog($data, $mark, $type);
+        $filename = date('d-m-Y');
+
+        $debugBacktrace = debug_backtrace();
+
+        $record = $this->formattingRecord($debugBacktrace, 'success', $mark, $data);
+
+        $this->store($record, $filename);
     }
+
+
+    //-------------------- additional log methods --------------------//
+
+    /**
+     * logging data from $request object
+     * @param null|string $key
+     * @throws Exception
+     */
+    public function request($key = null)
+    {
+        $filename = date('d-m-Y');
+
+        $mark = "-";
+
+        $debugBacktrace = debug_backtrace();
+
+        $data = request()->toArray();
+
+        if ( ! is_null($key) && array_key_exists($key, $data)) {
+            $mark = "key: " . $key;
+            $tmpArr[$key] = $data[$key];
+            $data = $tmpArr;
+        } else {
+            $data = [];
+            $data['key'] = 'not found';
+        }
+
+        $record = $this->formattingRecord($debugBacktrace, 'request', $mark, $data);
+
+        $this->store($record, $filename);
+    }
+
+    /**
+     * logging data from request inputs
+     * @param null|string $key
+     * @throws Exception
+     */
+    public function input($key = null)
+    {
+        $filename = date('d-m-Y');
+
+        $debug_backtrace = debug_backtrace();
+
+        $data = request()->all();
+
+        if (!is_null($key))
+        {
+            $data = request()->input($key);
+        }
+
+        $record = $this->formattingRecord($debug_backtrace, 'input', 'data from request inputs', $data);
+
+        $this->store($record, $filename);
+    }
+
+    /**
+     * logging data from request->json
+     * @param null|string $key
+     * @throws Exception
+     */
+    public function json($key = null)
+    {
+        $filename = date('d-m-Y');
+
+        $debug_backtrace = debug_backtrace();
+
+        $data = request()->json()->all();
+
+        if (!is_null($key))
+        {
+            $tmp_arr = data_get($data, $key, $data);
+
+            $data = $tmp_arr;
+        }
+
+        $record = $this->formattingRecord($debug_backtrace, 'json', 'data from request->json', $data);
+
+        $this->store($record, $filename);
+    }
+
+    /**
+     * logging data from $_POST array
+     * @param null|string $key
+     * @throws Exception
+     */
+    public function post($key = null)
+    {
+        $filename = date('d-m-Y');
+
+        $debug_backtrace = debug_backtrace();
+
+        $data = $_POST;
+
+        if (!is_null($key))
+        {
+            $tmp_arr = data_get($data, $key, $data);
+
+            $data = $tmp_arr;
+        }
+
+        $record = $this->formattingRecord($debug_backtrace, 'post', 'data from $_POST array', $data);
+
+        $this->store($record, $filename);
+    }
+
+    /**
+     * logging data from $_GET array
+     * @param null|string $key
+     * @throws Exception
+     */
+    public function get($key = null)
+    {
+        $filename = date('d-m-Y');
+
+        $debug_backtrace = debug_backtrace();
+
+        $data = $_GET;
+
+        if (!is_null($key))
+        {
+            $tmp_arr = data_get($data, $key, $data);
+
+            $data = $tmp_arr;
+        }
+
+        $record = $this->formattingRecord($debug_backtrace, 'get', 'data from $_GET array', $data);
+
+        $this->store($record, $filename);
+    }
+
+    /**
+     * logging data from php://input
+     * @param null|string $key
+     * @throws Exception
+     */
+    public function php($key = null)
+    {
+        $filename = date('d-m-Y');
+
+        $debug_backtrace = debug_backtrace();
+
+        $string = file_get_contents('php://input');
+
+        $data = [];
+
+        $pairs = explode('&', $string);
+
+        foreach ($pairs as $pair)
+        {
+            $key_value_arr = explode('=', $pair);
+
+            $data[$key_value_arr[0]] = $key_value_arr[1];
+        }
+
+        if (!is_null($key))
+        {
+            $tmp_arr = data_get($data, $key, $data);
+
+            $data = $tmp_arr;
+        }
+
+        $record = $this->formattingRecord($debug_backtrace, 'php', 'php://input record', $data);
+
+        $this->store($record, $filename);
+    }
+
+    /**
+     * logging data from $_SERVER array
+     * @param null|string $key
+     * @throws Exception
+     */
+    public function server($key = null)
+    {
+        $filename = date('d-m-Y');
+
+        $debug_backtrace = debug_backtrace();
+
+        $data = $_SERVER;
+
+        if (!is_null($key))
+        {
+            $tmp_arr = data_get($data, $key, $data);
+
+            $data = $tmp_arr;
+        }
+
+        $record = $this->formattingRecord($debug_backtrace, 'server', 'data from $_SERVER array', $data);
+
+        $this->store($record, $filename);
+    }
+
+    /**
+     * logging data from $_COOKIE array
+     * @param null|string $key
+     * @throws Exception
+     */
+    public function cookies($key = null)
+    {
+        $filename = date('d-m-Y');
+
+        $debug_backtrace = debug_backtrace();
+
+        $data = $_COOKIE;
+
+        if (!is_null($key))
+        {
+            $tmp_arr = data_get($data, $key, $data);
+
+            $data = $tmp_arr;
+        }
+
+        $record = $this->formattingRecord($debug_backtrace, 'cookies', 'data from $_COOKIE array', $data);
+
+        $this->store($record, $filename);
+    }
+
+    /**
+     * logging data from $request->headers
+     * @param null|string $key
+     * @throws Exception
+     */
+    public function headers($key = null)
+    {
+        $filename = date('d-m-Y');
+
+        $debug_backtrace = debug_backtrace();
+
+        $data = request()->header();
+
+        if (!is_null($key))
+        {
+            $tmp_arr = data_get($data, $key, $data);
+
+            $data = $tmp_arr;
+        }
+
+        $record = $this->formattingRecord($debug_backtrace, 'headers', 'data from $request->header()', $data);
+
+        $this->store($record, $filename);
+    }
+
 }
