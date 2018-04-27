@@ -107,19 +107,16 @@ class Logger extends Helper
     {
         $filename = date('d-m-Y');
 
-        $mark = "-";
+        $mark = "data from request object";
 
         $debugBacktrace = debug_backtrace();
 
         $data = request()->toArray();
 
-        if ( ! is_null($key) && array_key_exists($key, $data)) {
-            $mark = "key: " . $key;
-            $tmpArr[$key] = $data[$key];
-            $data = $tmpArr;
-        } else {
-            $data = [];
-            $data['key'] = 'not found';
+        if ( ! is_null($key)) {
+            $tmp_arr = data_get($data, $key, ["key: $key" => 'not found']);
+
+            $data = $tmp_arr;
         }
 
         $record = $this->formattingRecord($debugBacktrace, 'request', $mark, $data);
@@ -136,16 +133,19 @@ class Logger extends Helper
     {
         $filename = date('d-m-Y');
 
+        $mark = 'data from request inputs';
+
         $debug_backtrace = debug_backtrace();
 
         $data = request()->all();
 
-        if (!is_null($key))
-        {
-            $data = request()->input($key);
+        if ( ! is_null($key)) {
+            $tmp_arr = data_get($data, $key, ["key: $key" => 'not found']);
+
+            $data = $tmp_arr;
         }
 
-        $record = $this->formattingRecord($debug_backtrace, 'input', 'data from request inputs', $data);
+        $record = $this->formattingRecord($debug_backtrace, 'input', $mark, $data);
 
         $this->store($record, $filename);
     }
@@ -159,18 +159,19 @@ class Logger extends Helper
     {
         $filename = date('d-m-Y');
 
+        $mark = 'data from request->json';
+
         $debug_backtrace = debug_backtrace();
 
         $data = request()->json()->all();
 
-        if (!is_null($key))
-        {
-            $tmp_arr = data_get($data, $key, $data);
+        if ( ! is_null($key)) {
+            $tmp_arr = data_get($data, $key, ["key: $key" => 'not found']);
 
             $data = $tmp_arr;
         }
 
-        $record = $this->formattingRecord($debug_backtrace, 'json', 'data from request->json', $data);
+        $record = $this->formattingRecord($debug_backtrace, 'json', $mark, $data);
 
         $this->store($record, $filename);
     }
@@ -184,18 +185,19 @@ class Logger extends Helper
     {
         $filename = date('d-m-Y');
 
+        $mark = 'data from $_POST array';
+
         $debug_backtrace = debug_backtrace();
 
         $data = $_POST;
 
-        if (!is_null($key))
-        {
-            $tmp_arr = data_get($data, $key, $data);
+        if ( ! is_null($key)) {
+            $tmp_arr = data_get($data, $key, ["key: $key" => 'not found']);
 
             $data = $tmp_arr;
         }
 
-        $record = $this->formattingRecord($debug_backtrace, 'post', 'data from $_POST array', $data);
+        $record = $this->formattingRecord($debug_backtrace, 'post', $mark, $data);
 
         $this->store($record, $filename);
     }
@@ -209,18 +211,19 @@ class Logger extends Helper
     {
         $filename = date('d-m-Y');
 
+        $mark = 'data from $_GET array';
+
         $debug_backtrace = debug_backtrace();
 
         $data = $_GET;
 
-        if (!is_null($key))
-        {
-            $tmp_arr = data_get($data, $key, $data);
+        if ( ! is_null($key)) {
+            $tmp_arr = data_get($data, $key, ["key: $key" => 'not found']);
 
             $data = $tmp_arr;
         }
 
-        $record = $this->formattingRecord($debug_backtrace, 'get', 'data from $_GET array', $data);
+        $record = $this->formattingRecord($debug_backtrace, 'get', $mark, $data);
 
         $this->store($record, $filename);
     }
@@ -234,6 +237,8 @@ class Logger extends Helper
     {
         $filename = date('d-m-Y');
 
+        $mark = 'data from php://input';
+
         $debug_backtrace = debug_backtrace();
 
         $string = file_get_contents('php://input');
@@ -242,21 +247,19 @@ class Logger extends Helper
 
         $pairs = explode('&', $string);
 
-        foreach ($pairs as $pair)
-        {
+        foreach ($pairs as $pair) {
             $key_value_arr = explode('=', $pair);
 
             $data[$key_value_arr[0]] = $key_value_arr[1];
         }
 
-        if (!is_null($key))
-        {
-            $tmp_arr = data_get($data, $key, $data);
+        if ( ! is_null($key)) {
+            $tmp_arr = data_get($data, $key, ["key: $key" => 'not found']);
 
             $data = $tmp_arr;
         }
 
-        $record = $this->formattingRecord($debug_backtrace, 'php', 'php://input record', $data);
+        $record = $this->formattingRecord($debug_backtrace, 'php', $mark, $data);
 
         $this->store($record, $filename);
     }
@@ -270,18 +273,19 @@ class Logger extends Helper
     {
         $filename = date('d-m-Y');
 
+        $mark = 'data from $_SERVER array';
+
         $debug_backtrace = debug_backtrace();
 
         $data = $_SERVER;
 
-        if (!is_null($key))
-        {
-            $tmp_arr = data_get($data, $key, $data);
+        if ( ! is_null($key)) {
+            $tmp_arr = data_get($data, $key, ["key: $key" => 'not found']);
 
             $data = $tmp_arr;
         }
 
-        $record = $this->formattingRecord($debug_backtrace, 'server', 'data from $_SERVER array', $data);
+        $record = $this->formattingRecord($debug_backtrace, 'server', $mark, $data);
 
         $this->store($record, $filename);
     }
@@ -295,18 +299,19 @@ class Logger extends Helper
     {
         $filename = date('d-m-Y');
 
+        $mark = 'data from $_COOKIE array';
+
         $debug_backtrace = debug_backtrace();
 
         $data = $_COOKIE;
 
-        if (!is_null($key))
-        {
-            $tmp_arr = data_get($data, $key, $data);
+        if ( ! is_null($key)) {
+            $tmp_arr = data_get($data, $key, ["key: $key" => 'not found']);
 
             $data = $tmp_arr;
         }
 
-        $record = $this->formattingRecord($debug_backtrace, 'cookies', 'data from $_COOKIE array', $data);
+        $record = $this->formattingRecord($debug_backtrace, 'cookies', $mark, $data);
 
         $this->store($record, $filename);
     }
@@ -320,18 +325,19 @@ class Logger extends Helper
     {
         $filename = date('d-m-Y');
 
+        $mark = 'data from $request->header()';
+
         $debug_backtrace = debug_backtrace();
 
         $data = request()->header();
 
-        if (!is_null($key))
-        {
-            $tmp_arr = data_get($data, $key, $data);
+        if ( ! is_null($key)) {
+            $tmp_arr = data_get($data, $key, ["key: $key" => 'not found']);
 
             $data = $tmp_arr;
         }
 
-        $record = $this->formattingRecord($debug_backtrace, 'headers', 'data from $request->header()', $data);
+        $record = $this->formattingRecord($debug_backtrace, 'headers', $mark, $data);
 
         $this->store($record, $filename);
     }
