@@ -4,7 +4,6 @@ namespace DivArt\Logger;
 
 use App\Http\Controllers\Controller;
 use DivArt\Logger\Facades\Logger;
-use Illuminate\Support\Facades\Storage;
 
 /**
  * Class LogController
@@ -12,14 +11,28 @@ use Illuminate\Support\Facades\Storage;
  */
 class LogController extends Controller
 {
-    public $logs = [];
-
+    /**
+     * log files
+     * @var array
+     */
     public $files = [];
 
+    /**
+     * all dates
+     * @var array
+     */
     public $dates = [];
 
+    /**
+     * all types
+     * @var array
+     */
     public $types = [];
 
+    /**
+     * all marks
+     * @var array
+     */
     public $marks = [];
 
     /**
@@ -31,57 +44,28 @@ class LogController extends Controller
     }
 
     /**
+     * show all available logs
      * @param string $type
      * @param null $date
      * @return \Illuminate\Contracts\View\Factory|\Illuminate\View\View
      */
     public function showLogs($type = 'all', $date = null)
     {
-        $rootPath = storage_path('logger');
+        $client = Logger::createLocalStorageDriver();
 
-        if (config('logger.path')) {
-            $rootPath = storage_path(config('logger.path'));
-        }
-
-        $client = Storage::createLocalDriver(['root' => $rootPath]);
+        $rootPath = Logger::getRootPath();
 
         $allFiles = $client->files();
 
-        foreach ($allFiles as $file) {
-            $this->dates[] = str_replace('.json', '', $file);
+        $filterParams = Logger::getFilterParams($allFiles, $rootPath, $this->dates, $this->types, $this->marks);
 
-            foreach (file("$rootPath/$file") as $log) {
-                $d = json_decode($log);
+        $this->dates = $filterParams['dates'];
 
-                $this->marks[] = $d->mark;
+        $this->types = $filterParams['types'];
 
-                $this->types[] = $d->type;
-            }
-        }
+        $this->marks = $filterParams['marks'];
 
-        $this->types = array_unique($this->types);
-
-        $this->marks = array_unique($this->marks);
-
-        if ( ! is_null($date)) {
-            if ($client->exists("$date.json")) {
-                foreach (file("$rootPath/$date.json") as $log) {
-                    $this->files[$date][] = json_decode($log);
-                }
-            }
-        } else {
-            foreach ($allFiles as $file) {
-                $this->files[$file] = file("$rootPath/$file");
-            }
-
-            foreach ($this->files as $file => $fileLogs) {
-                foreach ($fileLogs as $log) {
-                    $this->logs[str_replace('.json', '', $file)][] = json_decode($log);
-                }
-            }
-
-            $this->files = $this->logs;
-        }
+        $this->files = Logger::fillLogFiles($rootPath, $client, $date, $allFiles);
 
         return view('div-art::logs', [
             'files' => $this->files,
@@ -92,6 +76,7 @@ class LogController extends Controller
     }
 
     /**
+     * filter logs by params
      * @return \Illuminate\Contracts\View\Factory|\Illuminate\Http\RedirectResponse|\Illuminate\View\View
      */
     public function filterLogs()
@@ -106,93 +91,23 @@ class LogController extends Controller
             return redirect()->route('all-logs', ['type'=>'all']);
         }
 
-        $rootPath = storage_path('logger');
+        $rootPath = Logger::getRootPath();
 
-        if (config('logger.path')) {
-            $rootPath = storage_path(config('logger.path'));
-        }
-
-        $client = Storage::createLocalDriver(['root' => $rootPath]);
+        $client = Logger::createLocalStorageDriver();
 
         $allFiles = $client->files();
 
-        foreach ($allFiles as $file) {
-            $this->dates[] = str_replace('.json', '', $file);
+        $filterParams = Logger::getFilterParams($allFiles, $rootPath, $this->dates, $this->types, $this->marks);
 
-            foreach (file("$rootPath/$file") as $log) {
-                $d = json_decode($log);
-                $this->marks[] = $d->mark;
-                $this->types[] = $d->type;
-            }
-        }
+        $this->dates = $filterParams['dates'];
 
-        $this->types = array_unique($this->types);
+        $this->types = $filterParams['types'];
 
-        $this->marks = array_unique($this->marks);
+        $this->marks = $filterParams['marks'];
 
-        if ( ! is_null($date)) {
-            if ($client->exists("$date.json")) {
-                foreach (file("$rootPath/$date.json") as $log) {
-                    $this->files[$date][] = json_decode($log);
-                }
-            }
-        } else {
-            foreach ($allFiles as $file) {
-                $this->files[$file] = file("$rootPath/$file");
-            }
+        $this->files = Logger::fillLogFiles($rootPath, $client, $date, $allFiles);
 
-            foreach ($this->files as $file => $fileLogs) {
-                foreach ($fileLogs as $log) {
-                    $this->logs[str_replace('.json', '', $file)][] = json_decode($log);
-                }
-            }
-
-            $this->files = $this->logs;
-        }
-
-        if ( ! is_null($type) && ! is_null($mark)) {
-            foreach ($this->files as $file => $logs) {
-                foreach ($logs as $log) {
-                    if ($log->type == $type && $log->mark == $mark) {
-                        $tmp[$file][] = $log;
-                    }
-                }
-            }
-
-            if ( ! empty($tmp)) {
-                $this->files = $tmp;
-            }
-        }
-
-
-        if (is_null($mark) && ! is_null($type)) {
-            foreach ($this->files as $file => $logs) {
-                foreach ($logs as $log) {
-                    if ($log->type == $type) {
-                        $tmp[$file][] = $log;
-                    }
-                }
-
-            }
-
-            if ( ! empty($tmp)) {
-                $this->files = $tmp;
-            }
-        }
-
-        if (is_null($type) && ! is_null($mark)) {
-            foreach ($this->files as $file => $logs) {
-                foreach ($logs as $log) {
-                    if ($log->mark == $mark) {
-                        $tmp[$file][] = $log;
-                    }
-                }
-            }
-
-            if ( ! empty($tmp)) {
-                $this->files = $tmp;
-            }
-        }
+        $this->files = Logger::filterLogs($this->files, $type, $mark);
 
         return view('div-art::logs', [
             'files' => $this->files,
@@ -203,6 +118,7 @@ class LogController extends Controller
     }
 
     /**
+     * delete log in file
      * @return \Illuminate\Http\RedirectResponse
      */
     public function deleteLog()
@@ -217,13 +133,9 @@ class LogController extends Controller
 
         $file_ = request('file');
 
-        $rootPath = storage_path('logger');
+        $client = Logger::createLocalStorageDriver();
 
-        if (config('logger.path')) {
-            $rootPath = storage_path(config('logger.path'));
-        }
-
-        $client = Storage::createLocalDriver(['root' => $rootPath]);
+        $rootPath = Logger::getRootPath();
 
         $file = file("$rootPath/$date.json");
 
@@ -232,7 +144,8 @@ class LogController extends Controller
         foreach ($file as $k => $v) {
             $file[$k] = json_decode($file[$k]);
 
-            if ($file[$k] && ! ($file[$k]->type == $type && $file[$k]->time == $time && $file[$k]->line == $line && $file[$k]->file == $file_)) {
+            if ($file[$k] && ! ($file[$k]->type == $type && $file[$k]->time == $time &&
+                    $file[$k]->line == $line && $file[$k]->file == $file_)) {
                 Logger::store($file[$k], $date);
             }
         }
@@ -241,18 +154,13 @@ class LogController extends Controller
     }
 
     /**
+     * delete log file
      * @param $date
      * @return \Illuminate\Http\RedirectResponse
      */
     public function deleteLogFile($date)
     {
-        $rootPath = storage_path('logger');
-
-        if (config('logger.path')) {
-            $rootPath = storage_path(config('logger.path'));
-        }
-
-        $client = Storage::createLocalDriver(['root' => $rootPath]);
+        $client = Logger::createLocalStorageDriver();
 
         if ($client->exists("$date.json")) {
             $client->delete("$date.json");
@@ -262,17 +170,12 @@ class LogController extends Controller
     }
 
     /**
+     * delete all file logs
      * @return \Illuminate\Http\RedirectResponse
      */
     public function deleteAllLogs()
     {
-        $rootPath = storage_path('logger');
-
-        if (config('logger.path')) {
-            $rootPath = storage_path(config('logger.path'));
-        }
-
-        $client = Storage::createLocalDriver(['root' => $rootPath]);
+        $client = Logger::createLocalStorageDriver();
 
         $files = $client->files();
 
@@ -282,6 +185,7 @@ class LogController extends Controller
     }
 
     /**
+     * delete log file by params
      * @return \Illuminate\Http\RedirectResponse
      */
     public function deleteLogFileByParam()
@@ -290,13 +194,9 @@ class LogController extends Controller
 
         $type = request('type');
 
-        $rootPath = storage_path('logger');
+        $client = Logger::createLocalStorageDriver();
 
-        if (config('logger.path')) {
-            $rootPath = storage_path(config('logger.path'));
-        }
-
-        $client = Storage::createLocalDriver(['root' => $rootPath]);
+        $rootPath = Logger::getRootPath();
 
         $files = $client->files();
 
