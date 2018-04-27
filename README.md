@@ -41,7 +41,7 @@ To manage directory for storing logs just change default value of `'path'`:
 By default logs lifetime is `7` days, to change it:
 
 ```
-//this integer value must be more than 0
+//if you set this to 0 - logs will not be deleted
 'expire_days' => 7
 ```
 
