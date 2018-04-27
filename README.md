@@ -78,8 +78,6 @@ Route::get('/div-art/logger/all/{date?}');
 
 To manage all your logs go to this link example in browser `http://your-app.xyz/div-art/logger/all`
 
-<img src='./img/ex.jpg'>
-
 ## Methods:
 
 ``` php
